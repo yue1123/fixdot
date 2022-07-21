@@ -1,4 +1,4 @@
-不过，在配合使用TypeScript与Babel时，仍然有一些 注意事项。因为Babel对Typescrip的支持是纯编译形式（无类型校验，因此Jest在运行测试时不会对它们进行类型检查. 如果需要类型校验。可以改用ts-jest .也用ts_jest .也可以单独运行TypeScript编译器 tsc （或作为构建过程的一部分）  ,
+不过，在配合使用TypeScript与Babel时，仍然有一些 注意事项。因为Babel对Typescrip的支持是纯编译形式（无类型校验，因此Jest在运行测试时不会对它们进行类型检查。 如果需要类型校验。可以改用ts-jest .也用ts_jest .也可以单独运行TypeScript编译器 tsc （或作为构建过程的一部分）  ,
 
  // 缓存结果，避免tooltip多次调用
 var cacheMap = Object.create(null)
@@ -65,7 +65,7 @@ app.controller('SecurityPolicyListCtrl', function ($scope, SdpService, alerts, t
             var cycleStr = ''
             var uncycleStr = ``
             if (cycleTime) {
-                cycleStr = `周期性时间: 在${TIME_TYPE_MAP[cycleTime.type]}的`
+                cycleStr = `周期性时间undefined 在${TIME_TYPE_MAP[cycleTime.type]}的`
                 var month = cycleTime.months.join('，')
                 var week = cycleTime.weeks.map(function (item) {
                     return CONST.WEEK[item]

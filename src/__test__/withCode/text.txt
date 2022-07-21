@@ -1,0 +1,1072 @@
+不过,在配合使用TypeScript与Babel时,仍然有一些 注意事项.因为Babel对Typescrip的支持是纯编译形式（无类型校验,因此Jest在运行测试时不会对它们进行类型检查. 如果需要类型校验.可以改用ts-jest .也用ts_jest .也可以单独运行TypeScript编译器 tsc （或作为构建过程的一部分）  ,
+
+ // 缓存结果,避免tooltip多次调用
+var cacheMap = Object.create(null)
+
+'use strict';
+var app = angular.module('iamApp');
+
+/**
+ * 安全策略
+ */
+app.controller('SecurityPolicyListCtrl', function ($scope, SdpService, alerts, toastr, $cookies, $filter, $rootScope, commonService, CONST) {
+    /*查询条件*/
+    $scope.filter = {
+        page: {
+            number: 1,
+            size: 10,
+            totalElements: 0,
+            pageable: {}
+        },
+        keyword: ''/*关键字*/
+    }
+    $scope.policyDataList = []
+
+    function parseTimeRange(timeRange) {
+        var value = timeRange.split('-')
+        return value.map(function (item, index) {
+            if (Number(item)) {
+                return moment(Number(item)).format('YYYY-MM-DD HH:mm:ss')
+            }
+            return index === 0 ? '有效期' : '永久'
+        }).join('~')
+    }
+
+    function mapName(item) {
+        return item.selected.map(function (item) {
+            return item.name
+        }).join('，') || '无'
+    }
+
+    var TIME_TYPE_MAP = {
+        ED: '每天',
+        EW: '每周',
+        EM: '每月',
+        EY: '每年'
+    }
+
+    function parseValue(item) {
+        if (Array.isArray(item.value)) {
+            return item.value.join('，')
+        }
+        return item.value
+    }
+
+    function isArrSumEqualTarget(arr, target) {
+        var sum = arr.reduce(function (pre, cur) {
+            return pre + cur
+        }, 0)
+        return sum === target
+    }
+
+    var filterMap = {
+        TIME: function (item) {
+            var cycleTime = item.value.cycle
+            var cycleStr = ''
+            var uncycleStr = ``
+            if (cycleTime) {
+                cycleStr = `周期性时间: 在${TIME_TYPE_MAP[cycleTime.type]}的`
+                var month = cycleTime.months.join('，')
+                var week = cycleTime.weeks.map(function (item) {
+                    return CONST.WEEK[item]
+                }).join('，')
+                var time = cycleTime.times.join('，')
+                var day = cycleTime.days.join('，')
+                if (month) {
+                    var allMonthsSum = 78
+                    var isEveryMonth = isArrSumEqualTarget(cycleTime.months, allMonthsSum)
+                    cycleStr += isEveryMonth ? '每月的' : `${month}月份的`
+                }
+                if (week) {
+                    cycleStr += `${week}的`
+                }
+                if (day) {
+                    var allDaysSum = 496
+                    var isEveryDay = isArrSumEqualTarget(cycleTime.days, allDaysSum)
+                    cycleStr += isEveryDay ? '每天的' : `${day}号的`
+                }
+                if (time) {
+                    cycleStr += `${time}的`
+                }
+                cycleStr += '时间有效'
+            }
+            var uncycleTime = item.value.unCycle
+            if (uncycleTime && uncycleTime.length) {
+                var temp = uncycleTime.map(function (item) {
+                    return parseTimeRange(item)
+                })
+                uncycleStr = '非周期性时间: ' + temp.join('，')
+            }
+            return cycleStr + ' ' + uncycleStr
+        },
+        IP: parseValue,
+        IP_RANGE_SECTION: parseValue,
+        SPECIFIED_FILE: parseValue,
+        DEVICE_ID: mapName,
+        CREDIT_STATUS: function (item) {
+            return item.value === 'true'
+                ? '已授信'
+                : '未授信'
+        },
+        SYSTEM_VERSION: function (item) {
+            if (Array.isArray(item.value)) {
+                return item.value.map(function (os) {
+                    return CONST.OS_VERSION_MAP[os]
+                }).join('，')
+            }
+            return CONST.OS_VERSION_MAP[item.value]
+        }
+    }
+    // 缓存结果,避免tooltip多次调用
+    var cacheMap = Object.create(null)
+    $scope.parseValue = function (item) {
+        var cacheKey = item.$$hashKey
+        if (cacheMap[cacheKey]) {
+            return cacheMap[cacheKey]
+        }
+        var filterFn = filterMap[item.key]
+        var value = filterFn ? filterFn(item) : item.value
+        cacheMap[cacheKey] = value
+        return value
+    }
+
+    $scope.load = function (page) {
+        var params = {
+            page: page || $scope.filter.page.number,
+            size: $scope.filter.page.size,
+            keyword: $scope.filter.keyword
+        }
+        params.page -= 1
+        $scope.policyData = SdpService.getPolicyList(params);
+        $scope.policyDataBusy = commonService.busy($scope.policyData).load();
+        $scope.policyData.then(function (res) {
+            $scope.filter.page.number = res.data.data.number + 1
+            $scope.policyDataList = res.data.data.content;
+            $scope.policyDataList = $scope.policyDataList.sort(function (a, b) {
+                return a.sort - b.sort
+            })
+            $scope.filter.page.totalElements = res.data.data.totalElements;
+            $scope.filter.page.pageable = res.data.data.pageable;
+        })
+    }
+    // 删除
+    $scope.delete = function (id) {
+        alerts.warn('温馨提示', '确认删除该安全策略吗?', function () {
+            $scope.promise = SdpService.deletePolicy(id)
+            $scope.promise.then(function () {
+                toastr.success('删除成功');
+                if (($scope.filter.page.totalElements - 1) % $scope.filter.page.size === 0 && $scope.filter.page.number !== 1) {
+                    $scope.load($scope.filter.page.number - 1)
+                } else {
+                    $scope.load()
+                }
+            });
+            return $scope.promise;
+        })
+    }
+// 禁启用
+    $scope.modifyEnabled = function (id, item) {
+        SdpService.enableAndDisablePolicy(id).then(function () {
+            item.enabled = !item.enabled
+        })
+    }
+    $scope.actionsMapText = {
+        ALLOW_ACCESS: '允许访问',
+        AUTHENTICATION_ACCESS: '认证后访问',
+        DENY_ACCESS: '拒绝访问',
+        DENY_ACCESS_DISABLE_ACCOUNT: '拒绝访问并禁用账号',
+        DENY_ACCESS_LOG_OUT: '拒绝访问并注销登录'
+    }
+    $scope.load()
+})
+
+app.controller('SecurityPolicyConfigCtrl', function ($scope, SdpService, alerts, toastr, $cookies, $timeout, $filter, $rootScope, commonService, $state, $uibModal, CONST) {
+    $scope.uibIndex = 0
+    $scope.WEEKS = CONST.WEEK
+    $scope.type = $state.params.id !== 'new' ? 'edit' : 'new'
+    $scope.typeTextMap = {
+        new: '新建',
+        edit: '编辑'
+    }
+    $scope.loading = false
+
+    // 动态的校验规则map
+    $scope.rulesMap = {
+        IP: {
+            test: '(((\\d{1,2})|(1\\d{2})|(2[0-4]\\d)|(25[0-5]))\\.){3}((\\d{1,2})|(1\\d{2})|(2[0-4]\\d)|(25[0-5]))',
+            message: 'IPv4格式不正确',
+            placeholder: '请输入IPv4地址'
+        },
+        IP_RANGE_SECTION: {
+            test: '^((\\d|[1-9]\\d|1\\d\\d|2([0-4]\\d|5[0-5]))\\.){3}((\\d|[1-9]\\d|1\\d\\d|2([0-4]\\d|5[0-5]))\\/){1}(\\d|[1-3]\\d)$',
+            message: 'IPv4地址范围格式不正确',
+            placeholder: '请按照CIDR格式输入，比如127.0.0.1/24'
+        },
+        SPECIFIED_FILE: {
+            test: '[a-zA-Z]:(\\\\[\\w\u4e00-\u9fa5\\(\\)\\[\\]\\{\\}`~!@#$%^&]+[`~!@#$%^&\\(\\)\\[\\]\\{\\}\\s\\w\u4e00-\u9fa5]+)+(\\\\[`~!@#$%^&\\w\u4e00-\u9fa5.\\(\\)\\[\\]\\{\\}]([.]*[-`~!@#$%^&\\w\\s\\(\\)\\[\\]\\{\\}\u4e00-\u9fa5])+)+',
+            message: '文件路径格式不正确',
+            placeholder: '请输入文件路径'
+        }
+    }
+    $scope.hours = Array.apply(null, {length: 24}).map(function (_, i) {
+        return i < 10 ? '0' + i : i
+    })
+    $scope.sec = Array.apply(null, {length: 60}).map(function (_, i) {
+        return i < 10 ? '0' + i : i
+    })
+    $scope.osVersionList = []
+    $scope.actions = []
+    $scope.selectOptions = {}
+    $scope.inputType = {}
+    $scope.categoryType = {
+        DEVICE_ID: 'ACCESS_EQUIPMENT',
+        IP_RANGE_SECTION: 'NETWORK_ENVIRONMENT',
+        NETWORK_ENVIRONMENT: 'NETWORK_ENVIRONMENT',
+        PATCH: 'OPERATING_SYSTEM',
+        SPECIFIED_FILE: 'OPERATING_SYSTEM',
+        SYSTEM_VERSION: 'OPERATING_SYSTEM',
+        INSTALL_SOFTWARE: 'OPERATING_SYSTEM',
+        TIME: 'OTHER'
+    }
+
+    $scope.timeConfig = {
+        tabIndex: 0,
+        valueLimit: {
+            day: {
+                MIN: 0,
+                type: '日期',
+                MAX: 31,
+            },
+            month: {
+                MIN: 0,
+                type: '月份',
+                MAX: 12,
+            }
+        },
+        cycle: {
+            type: '', // ED: 每天 EW: 每周 EM: 每月 EY: 每年
+            ED: {
+                // days,week,months [0] 表示所有
+                times: [
+                    [['00', '00'], ['23', '59']],
+                ]
+            },
+            EW: {
+                // days,week,months [0] 表示所有
+                weeks: [true, true, true, true, true, false, false],
+                times: [
+                    [['00', '00'], ['23', '59']],
+                ]
+            },
+            EM: {
+                // days,week,months [0] 表示所有
+                days: [],
+                times: [
+                    [['00', '00'], ['23', '59']],
+                ]
+            },
+            EY: {
+                // days,week,months [0] 表示所有
+                days: [],
+                months: [],
+                times: [
+                    [['00', '00'], ['23', '59']],
+                ]
+            },
+        },
+        unCycle: [['', '']],
+        // 添加周期性时间段
+        addTime: function (type) {
+            if (type === 'unCycle') {
+                this.unCycle.push(['', ''])
+            } else {
+                this.cycle[this.cycle.type].times.push([['00', '00'], ['23', '59']])
+            }
+        },
+        // 添加时间段
+        removeTime: function (type, index) {
+            if (type === 'unCycle') {
+                this.unCycle.splice(index, 1)
+            } else {
+                this.cycle[this.cycle.type].times.splice(index, 1)
+            }
+        },
+        onTagAdding: function (type, value) {
+            if (isNaN(value.text)) {
+                toastr.warning('请输入数字')
+                return false
+            }
+            var config = this.valueLimit[type]
+            if (value.text <= config.MIN) {
+                toastr.warning(config.type + '必须大于零')
+                return false
+            } else if (value.text > config.MAX) {
+                toastr.warning(config.type + '不能超过' + config.MAX)
+                return false
+            }
+            return true
+        },
+        /**
+         * 解析时间
+         * @returns {[{value: null, key, operator: string}]|*[]}
+         */
+        genFormData: function () {
+            var template = {
+                key: $scope.inputType['TIME'].code,
+                operator: 'EQ',
+                value: null
+            }
+            var formData = {
+                // cycle: {
+                //     type: '',
+                //     days: [],
+                //     weeks: [],
+                //     months: [],
+                //     times: []
+                // },
+                // unCycle: []
+            }
+            if (this.tabIndex === 1) {
+                // 非周期性 多条
+                var temp = []
+                formData.unCycle = []
+                this.unCycle.forEach(function (item, index) {
+                    var startTime = ''
+                    var endTime = ''
+                    if (!item[0] && !item[1]) return
+                    if (item[0]) {
+                        startTime = new Date(item[0]).getTime()
+                    } else {
+                        startTime = '0'
+                    }
+                    if (item[1]) {
+                        endTime = new Date(item[1]).getTime()
+                    } else {
+                        endTime = '0'
+                    }
+                    if (item[0] && item[1] && parseInt(endTime) - parseInt(startTime) <= 0) {
+                        throw new Error('时间' + (index + 1) + '的结束时间不能小于或等于开始时间')
+                    }
+                    temp.push(startTime + '-' + endTime)
+                })
+                formData.unCycle = temp.length ? temp : null
+            } else if (this.tabIndex === 0) {
+                // 周期性 一条
+                formData.cycle = {
+                    type: '',
+                    days: [],
+                    weeks: [],
+                    months: [],
+                    times: []
+                }
+                var type
+                if ((type = this.cycle.type)) {
+                    var data = this.cycle[type]
+                    var keys = Object.keys(data)
+                    formData.cycle.type = type
+                    keys.forEach(function (key) {
+                        var value = data[key]
+                        switch (key) {
+                            case 'times':
+                                formData.cycle.times = value.map(function (item, index) {
+                                    var start = parseInt(item[0].join(''))
+                                    var end = parseInt(item[1].join(''))
+                                    // console.log(start, end,)
+                                    if (start - end >= 0) {
+                                        throw new Error('周期性时间' + (index + 1) + '开始不能大于或等于结束时间')
+                                    }
+                                    return [item[0].join(':'), item[1].join(':')].join('-')
+                                })
+                                break;
+                            case 'days':
+                            case 'months':
+                                formData.cycle[key] = value.map(function (item) {
+                                    return item.text
+                                })
+                                break;
+                            case 'weeks':
+                                var temp = []
+                                value.forEach(function (item, index) {
+                                    if (item) temp.push(index + 1)
+                                })
+                                formData.cycle.weeks = temp
+                                break;
+                        }
+                    })
+                } else {
+                    formData.cycle = null
+                }
+            }
+
+
+            console.log(formData, '====')
+            // debugger
+            if (formData.unCycle || formData.cycle) {
+                template.value = formData
+                return [template]
+            }
+            return []
+        }
+    }
+    $scope.toggleChecked = function (type) {
+        $scope.timeConfig.cycle.type = $scope.timeConfig.cycle.type === type ? '' : type
+    }
+
+    function genArr(defaultType) {
+        // return $scope.type === 'new' ? [{operator: 'EQ', key: defaultType}] : []
+        return $scope.type === 'new' ? [{
+            // key: 'IP',
+            // operator: "IN",
+            // value: '192.1.1.1,192.1.1.2'
+        }] : []
+    }
+
+
+    // tag 输入框错误提示
+    $scope.handleError = function (err) {
+        toastr.warning(err)
+    }
+    $scope.getDisabled = function (key, data) {
+        for (var item in data) {
+            if (data[item].key === key) return true
+        }
+        return false
+    }
+    $scope.selectDatas = {
+        ACCESS_EQUIPMENT: {
+            title: '访问设备',
+            tips: '(不添加则默认全部设备)',
+            values: genArr('DEVICE_ID')
+        },
+        OPERATING_SYSTEM: {
+            title: '操作系统',
+            values: genArr('SYSTEM_VERSION')
+        },
+        NETWORK_ENVIRONMENT: {
+            title: '网络环境',
+            values: genArr('IP')
+        },
+        OTHER: {
+            title: '其他',
+            values: genArr('TIME')
+        },
+    }
+    // 条件数据结构
+    var conditionDataItem = {}
+    $scope.conditionDataItem = conditionDataItem
+
+    $scope.mfaConfig = {
+        executeModel: 'ANY',
+        mfas: []
+    }
+    $scope.formData = {
+        description: "",
+        enabled: true,
+        extras: "",
+        name: [],
+        performAction: "ALLOW",
+        sort: '',
+        strategyDtlDTO: []
+    }
+
+    // 判断类型提示文字Map
+    var selectOptionsTextMap = Object.create(null)
+
+    function genSelectOptionsTextMap() {
+        angular.forEach(Object.keys($scope.selectOptions), function (key) {
+            angular.forEach($scope.selectOptions[key], function (item) {
+                selectOptionsTextMap[item.value] = item.text
+            })
+        })
+    }
+
+    genSelectOptionsTextMap()
+    // 选择数据
+    $scope.showModal = function (item) {
+        var _modal
+        switch (item.key) {
+            case 'DEVICE_ID':
+                _modal = $uibModal.open({
+                    size: 'lg',
+                    windowTopClass: 'modal-alert',
+                    templateUrl: '/dashboard/strategy/security/device-list-model.html',
+                    controller: 'SelectDeviceModelCtrl',
+                    resolve: {
+                        data: {
+                            selectedType: ['NOT_IN', 'IN'].indexOf(item.operator) !== -1 ? 'MULTIPLE' : 'SINGULAR',
+                            selected: item.selected || []
+                        }
+                    }
+                });
+                break;
+        }
+        if (_modal) {
+            _modal.result.then(function (result) {
+                if (result) {
+                    item.selected = result
+                    // 单选
+                    if (['NOT_IN', 'IN'].indexOf(item.operator) === -1) {
+                        item.value = result[0].id
+                    } else {
+                        item.value = result.map(function (item) {
+                            return item.id
+                        })
+                    }
+
+                }
+            }).finally(function () {
+                commonService.adjustModalOverlay('close');
+            });
+        }
+    }
+
+    $scope.addItem = function (type) {
+        $scope.selectDatas[type].values.push(angular.copy(conditionDataItem))
+    }
+    $scope.removeItem = function (type, index) {
+        $scope.selectDatas[type].values.splice(index, 1)
+    }
+    $scope.removeSelected = function (data, index) {
+        if (typeof data.value === 'string') {
+            data.value = ''
+            data.selected = []
+            return
+        }
+        var curId = data.selected[index].id
+        var valueIndex = data.value.indexOf(curId)
+        data.selected.splice(index, 1)
+        valueIndex !== -1 && data.value.splice(valueIndex, 1)
+    }
+    $scope.updateAuthType = function (authType) {
+        if (authType === 'AUTH_REQUIRED' && $scope.formData.performAction !== 'AUTH_REQUIRED') {
+            $scope.changeAuthWay()
+        }
+        $scope.formData.performAction = authType
+    }
+    $scope.changeAuthWay = function () {
+        var _modal = $uibModal.open({
+            size: 'lg',
+            windowTopClass: 'modal-alert',
+            templateUrl: '/dashboard/strategy/security/auth-way-select-model.html',
+            controller: 'SelectAuthWay',
+            resolve: {
+                data: {
+                    mfaConfig: angular.copy($scope.mfaConfig)
+                }
+            }
+        });
+        _modal.result.then(function (data) {
+            $scope.mfaConfig = data
+        }).finally(function () {
+            commonService.adjustModalOverlay('close');
+        });
+    }
+
+    // 重置value
+    $scope.handleResetValue = function (item, focusKey) {
+        if (!!item.key) {
+            // 根据输入类型决定默认值
+            var gather = $scope.inputType[item.key].gather
+            item.value = gather === 'ARRAY' ? [] : ''
+            if (item.selected) delete item.selected
+        } else {
+            item.value = ''
+        }
+        focusKey !== 'operator' && (item.operator = '')
+    }
+
+    // ip tag add, check value
+    $scope.onIpTagAdding = function (key, value) {
+        var ruleConfig = $scope.rulesMap[key]
+        var reg = ruleConfig ? new RegExp(ruleConfig.test) : /.*/ig
+        if (!reg.test(value.text)) {
+            toastr.warning(ruleConfig.message)
+            return false
+        }
+        return true
+    }
+
+    // 只要对象中一个属性为true,就返回true
+    // function objSome(obj, keys) {
+    //     return keys.some(function (key) {
+    //         var value = obj[key]
+    //         if (value instanceof Array) {
+    //             return !!value.length
+    //         }
+    //         return !!value
+    //     })
+    // }
+
+    // 对象中所有属性为true,就返回true
+    function objEvery(obj, keys) {
+        return keys.every(function (key) {
+            var value = obj[key]
+            if (value instanceof Array) {
+                return !!value.length
+            }
+            return !!value
+        })
+    }
+
+    // select days
+    $scope.handleSelectDate = function (type) {
+        var cycleTime = $scope.timeConfig.cycle
+        var _modal = $uibModal.open({
+            size: 'lg',
+            windowTopClass: 'modal-alert',
+            templateUrl: '/dashboard/strategy/security/' + type + '-model.html',
+            controller: 'SelectDateModelCtrl',
+            resolve: {
+                data: {
+                    type: type,
+                    selected: cycleTime[cycleTime.type][type]
+                }
+            }
+        });
+        _modal.result.then(function (data) {
+            cycleTime[cycleTime.type][type] = data
+        }).finally(function () {
+            commonService.adjustModalOverlay('close');
+        });
+    }
+
+    // tagInput value init
+    $scope.initTagInputValue = function (item) {
+        if (item.value instanceof Array) {
+            item.value = item.value.map(function (item) {
+                return {text: item}
+            })
+        }
+    }
+
+    // multiple select value init
+    $scope.initMultipleSelectValue = function (item) {
+        if (Array.isArray(item.value)) {
+            var rawData = CONST.OS_VERSION
+            item.value = item.value.map(function (item) {
+                return rawData.find(function (OSItem) {
+                    return OSItem.value === item
+                })
+            })
+        }
+    }
+
+    // 初始化
+    function init() {
+        $scope.loading = true
+        SdpService.getClientPropertiesItem().then(function (res) {
+            angular.forEach(res.data.data, function (item) {
+                var extendInfo = JSON.parse(item.extendInfo)
+                $scope.inputType[item.value] = item
+                $scope.categoryType[item.value] = extendInfo.Parent
+                if (!$scope.selectOptions[extendInfo.Parent]) {
+                    $scope.selectOptions[extendInfo.Parent] = []
+                }
+                $scope.selectOptions[extendInfo.Parent].push({
+                    text: item.text,
+                    value: item.value,
+                })
+            })
+            // console.log($scope.inputType)
+            // FIXME: 优化此处 扁平化一点
+            if ($scope.type === 'edit') {
+                $scope.loading = true
+                SdpService.getPolicyById($state.params.id).then(function (res) {
+                    if (res.data.code === "SUCCESS") {
+                        // FIXME: strategyDtlVoList 会莫名出现{text:xxx}数据
+                        $scope.formData = JSON.parse(JSON.stringify(res.data.data))
+                        angular.forEach($scope.formData.strategyDtlVoList, function (item) {
+                            if (item.key === 'SYSTEM_VERSION' && typeof item.value === 'string') {
+                                item.value = [item.value]
+                            }
+                            if (item.key === 'TIME') {
+                                // 解析非周期时间
+                                if (item.value.unCycle && item.value.unCycle.length) {
+                                    $scope.timeConfig.tabIndex = 1
+                                    $scope.timeConfig.unCycle = item.value.unCycle.map(function (timeRange) {
+                                        var timeRange = timeRange.split('-')
+                                        return [timeRange[0] !== '0' ? new Date(Number(timeRange[0])) : '', timeRange[1] !== '0' ? new Date(Number(timeRange[1])) : '']
+                                    })
+                                } else {
+                                    $scope.timeConfig.unCycle = [['', '']]
+                                }
+                                // console.log(item.value.unCycle, $scope.timeConfig)
+                                // 周期性时间
+                                var cycleTime = item.value.cycle
+                                if (cycleTime && cycleTime.type) {
+                                    $scope.timeConfig.tabIndex = 0
+                                    // 拆分time
+                                    cycleTime.times = cycleTime.times.map(function (timeRange) {
+                                        return timeRange.split('-').map(function (time) {
+                                            return time.split(':')
+                                        })
+                                    })
+                                    if (cycleTime.type === 'EW') {
+                                        cycleTime.weeks = Array.apply(null, {length: 7}).map(function (week, index) {
+                                            return cycleTime.weeks.indexOf(index + 1) !== -1
+                                        })
+                                    }
+                                    console.log(cycleTime)
+                                    $scope.timeConfig.cycle.type = cycleTime.type
+                                    $scope.timeConfig.cycle[cycleTime.type] = cycleTime
+                                }
+                            }
+                            $scope.selectDatas[$scope.categoryType[item.key]].values.push(item)
+                        })
+                    }
+                    for (var key in $scope.selectDatas) {
+                        if ($scope.selectDatas.hasOwnProperty(key)) {
+                            if (!$scope.selectDatas[key].values.length) {
+                                $scope.selectDatas[key].values.push({})
+                            }
+                        }
+                    }
+                    try {
+                        $scope.mfaConfig = JSON.parse($scope.formData.extras)
+                    } catch (e) {
+
+                    }
+                })
+                    .finally(function () {
+                        $scope.loading = false
+                    })
+            }
+        }).finally(function () {
+            $scope.loading = false
+        })
+        $scope.osVersionList = CONST.OS_VERSION
+        // console.log($scope.osVersionList)
+        SdpService.getClientPropertiesPerformActionItem().then(function (res) {
+            $scope.actions = res.data.data
+        })
+    }
+
+    init()
+
+    // 保存
+    var keys = ['key', 'operator', 'value']
+    // 在不同的数据结构中取value
+    var valueKey = {
+        DEVICE_ID: 'id',
+        SYSTEM_VERSION: 'value',
+        INSTALL_SOFTWARE: 'text',
+        IP_RANGE_SECTION: 'text',
+        PATCH: 'text',
+        SPECIFIED_FILE: 'text',
+        IP: 'text',
+    }
+    $scope.savePolicy = function (form) {
+        if (form.$invalid) {
+            return;
+        }
+        var strategyDtlDTO = []
+        // console.log($scope.selectDatas)
+        try {
+            angular.forEach(Object.keys($scope.selectDatas), function (key) {
+                angular.forEach($scope.selectDatas[key].values, function (item, index1) {
+                    var tempData = angular.copy(item)
+                    // console.log(item)
+                    if (objEvery(item, keys)) {
+
+                        if (Array.isArray(item.value) && item.key !== 'DEVICE_ID') {
+                            // 多个tag输入框,或者下拉多选{text:string}[] 转 string[]
+                            tempData.value = tempData.value.map(function (item) {
+                                return item[valueKey[tempData.key]]
+                            })
+                            // console.log('tempDate.value', tempData.value)
+                            if (['NOT_IN', 'IN', 'BETWEEN'].indexOf(item.operator) === -1 && tempData.value.length === 1) {
+                                tempData.value = tempData.value.join('')
+                            }
+                        }
+                        var config = $scope.inputType[tempData.key]
+                        tempData.gather = config.gather
+                        tempData.key = config.code
+                        strategyDtlDTO.push(tempData)
+                    } else if (item.value && (!item.operator || !item.key)) {
+                        throw new Error('请完善' + $scope.selectDatas[key].title + '第' + (index1 + 1) + '条数据')
+                    }
+                })
+            })
+            // return console.log(strategyDtlDTO, $scope.timeConfig.genFormData())
+            // return console.log(strategyDtlDTO)
+            // console.log($scope.timeConfig.genFormData())
+            $scope.formData.extras = JSON.stringify($scope.mfaConfig)
+            $scope.formData.strategyDtlDTO = strategyDtlDTO
+            // return
+            if ($scope.type === 'new') {
+                // TIP: 这里是替换时间,不是追加,追加在编辑时有问题
+                // TIP: 通过apply 调用是避免一次if判断,apply 的参数时数据,没有配置时间就是一个空数组,就相当于没有push
+                Array.prototype.push.apply($scope.formData.strategyDtlDTO, $scope.timeConfig.genFormData())
+                // return console.log($scope.formData.strategyDtlDTO)
+                $scope.loading = true
+                SdpService.createPolicy($scope.formData).then(function (res) {
+                    toastr.success('保存成功')
+                    $state.go('admin.security_policy.list');
+                }).finally(function () {
+                    $scope.loading = false
+                })
+            } else if ($scope.type === 'edit') {
+                if (strategyDtlDTO.length && strategyDtlDTO[strategyDtlDTO.length - 1]['key'] === 'TIME:DATE_TIME:SELECT') {
+                    $scope.formData.strategyDtlDTO.splice(strategyDtlDTO.length - 1, 1)
+                }
+                Array.prototype.push.apply($scope.formData.strategyDtlDTO, $scope.timeConfig.genFormData())
+                // return console.log($scope.formData.strategyDtlDTO)
+                $scope.loading = true
+                SdpService.updatePolicyById($scope.formData.id, $scope.formData).then(function (res) {
+                    toastr.success('保存成功')
+                    $state.go('admin.security_policy.list');
+                }).finally(function () {
+                    $scope.loading = false
+                })
+            }
+        } catch (err) {
+            toastr.warning(err.message)
+        }
+    }
+})
+
+// 选择设备
+app.controller('SelectDeviceModelCtrl', function ($scope, SdpService, alerts, toastr, $cookies, $filter, $rootScope, commonService, data, $uibModalInstance) {
+    $scope.filter = {page: {number: 1, size: 5, totalPages: 0, totalElements: 0, pageable: {}}, keyword: ''};
+    // 单选:SINGULAR 还是多选:MULTIPLE
+    $scope.selectedType = data.selectedType || "SINGULAR"
+    $scope.selected = angular.copy(data.selected) || [];
+    $scope.keyword = '';
+
+    $scope.search = function () {
+        $scope.filter.page.number = 1
+        $scope.load()
+    }
+    /* 用户搜索 */
+    $scope.load = function () {
+        var params = {
+            page: $scope.filter.page.number,
+            size: $scope.filter.page.size,
+            keyword: $scope.filter.keyword,
+        }
+        params.page -= 1
+        $scope.promise = SdpService.getDeviceList(params)
+        $scope.promiseBusy = commonService.busy($scope.promise).load()
+        $scope.promise.then(function (data) {
+            $scope.pageContent = data.data.data;
+            $scope.filter.page.totalPages = data.data.data.totalPages;
+            $scope.filter.page.totalElements = data.data.data.totalElements;
+            $scope.filter.page.last = data.data.data.last;
+            $scope.filter.page.pageable = data.data.data.pageable;
+            if ($scope.selectedType === 'MULTIPLE') {
+                $scope.pageContent.content.forEach(function (item) {
+                    for (var a in $scope.selected) {
+                        if (item.id == $scope.selected[a].id) {
+                            item.selected = true;
+                        }
+                    }
+                });
+            }
+        })
+    };
+
+    /* 取消 */
+    $scope.cancel = function () {
+        $uibModalInstance.dismiss('cancel');
+    };
+
+    /* 确认 */
+    $scope.save = function () {
+        $uibModalInstance.close($scope.selected);
+    };
+
+    $scope.chooseItem = function (item) {
+        if ($scope.selectedType === 'MULTIPLE') {
+            if (item.selected) {
+                $scope.selected.push(item);
+            } else {
+                for (var i in $scope.selected) {
+                    if ($scope.selected[i].id == item.id) {
+                        $scope.selected.splice(i, 1);
+                    }
+                }
+            }
+        } else {
+            $scope.selected[0] = item;
+        }
+
+    };
+    $scope.load();
+})
+
+app.controller('SelectSecurityModelCtrl', function ($scope, SdpService, alerts, toastr, $cookies, $filter, $rootScope, commonService, data, $uibModalInstance) {
+    $scope.filter = {page: {number: 1, size: 5, totalPages: 0, totalElements: 0, pageable: {}}, keyword: ''};
+    // 单选:SINGULAR 还是多选:MULTIPLE
+    $scope.selectedType = data.selectedType || "SINGULAR"
+    $scope.selected = angular.copy(data.selected) || [];
+    $scope.keyword = '';
+
+    $scope.parseTime = function (time) {
+        var value = time.split('-')
+        var temp = value.map(function (item) {
+            if (Number(item)) {
+                return moment(Number(item)).format('YYYY-MM-DD HH:mm:ss')
+            }
+            return item
+        })
+        return temp.join('~')
+    }
+    $scope.mapName = function (list) {
+        return list.map(function (item) {
+            return item.name
+        }).join('，') || '无'
+    }
+
+    $scope.search = function () {
+        $scope.filter.page.number = 1
+        $scope.load()
+    }
+    /* 用户搜索 */
+    $scope.load = function () {
+        var params = {
+            page: $scope.filter.page.number,
+            size: $scope.filter.page.size,
+            keyword: $scope.filter.keyword,
+        }
+        params.page -= 1
+        $scope.promise = SdpService.getPolicyList(params)
+        $scope.promiseBusy = commonService.busy($scope.promise).load()
+        $scope.promise.then(function (data) {
+            $scope.pageContent = data.data.data;
+            $scope.filter.page.totalPages = data.data.data.totalPages;
+            $scope.filter.page.totalElements = data.data.data.totalElements;
+            $scope.filter.page.last = data.data.data.last;
+            $scope.filter.page.pageable = data.data.data.pageable;
+            if ($scope.selectedType === 'MULTIPLE') {
+                $scope.pageContent.content.forEach(function (item) {
+                    for (var a in $scope.selected) {
+                        if (item.id == $scope.selected[a].id) {
+                            item.selected = true;
+                        }
+                    }
+                });
+            }
+        })
+    };
+
+    /* 取消 */
+    $scope.cancel = function () {
+        $uibModalInstance.dismiss('cancel');
+    };
+
+    /* 确认 */
+    $scope.save = function () {
+        $uibModalInstance.close($scope.selected);
+    };
+
+    $scope.chooseItem = function (item) {
+
+        if ($scope.selectedType === 'MULTIPLE') {
+            if (item.selected) {
+                $scope.selected.push(item);
+            } else {
+                for (var i in $scope.selected) {
+                    if ($scope.selected[i].id == item.id) {
+                        $scope.selected.splice(i, 1);
+                    }
+                }
+            }
+        } else {
+            $scope.selected[0] = item;
+        }
+
+    };
+    $scope.load();
+})
+
+
+app.controller('SelectAuthWay', function ($scope, mfaService, CONST, alerts, toastr, $cookies, $filter, $rootScope, commonService, data, $uibModalInstance) {
+    $scope.mfaDataList = []
+    $scope.mfaConfig = data.mfaConfig
+    mfaService.pageMethods({
+        page: 0,
+        size: CONST.INT_MAX,
+        strategyType: 'AUTH',
+    }).then(function (res) {
+        $scope.mfaDataList = res.data.data.content
+        var selectedMfas = $scope.mfaConfig.mfas
+        angular.forEach($scope.mfaDataList, function (item) {
+            if (selectedMfas.indexOf(item.code) !== -1) {
+                item.selected = true
+            } else {
+                item.selected = false
+            }
+        })
+    })
+    $scope.parseTime = function (time) {
+        var value = time.split('-')
+        var temp = value.map(function (item) {
+            if (Number(item)) {
+                return moment(Number(item)).format('YYYY-MM-DD h:mm:ss')
+            }
+            return item
+        })
+        return temp.join('~')
+    }
+    /* 确认 */
+    $scope.ok = function () {
+        var selected = []
+        angular.forEach($scope.mfaDataList, function (item) {
+            if (item.selected) {
+                selected.push(item.code)
+            }
+        })
+        $scope.mfaConfig.mfas = selected
+        $uibModalInstance.close($scope.mfaConfig);
+    };
+    /* 取消 */
+    $scope.cancel = function () {
+        $uibModalInstance.dismiss('cancel');
+    };
+})
+
+
+app.controller('SelectDateModelCtrl', function ($scope, mfaService, CONST, alerts, toastr, $cookies, $filter, $rootScope, commonService, data, $uibModalInstance) {
+    var _data = data.selected || []
+    var length = {
+        days: 31,
+        months: 12
+    }[data.type]
+    _data = _data.map(function (item) {
+        return parseInt(item.text)
+    })
+
+    function checkAll(data) {
+        return data.every(function (item) {
+            return item
+        })
+    }
+
+    $scope.selected = Array.apply(null, {length: length}).map(function (value, index) {
+        return _data.indexOf(index + 1) !== -1
+    })
+
+    $scope.handleCheckAll = function () {
+        $scope.selected = $scope.selected.map(function () {
+            return $scope.checkAll
+        })
+    }
+    $scope.handleChange = function () {
+        $scope.checkAll = checkAll($scope.selected)
+    }
+    $scope.handleChange()
+    /* 确认 */
+    $scope.ok = function () {
+        var selected = $scope.selected.filter(function (item) {
+            return item
+        }).map(function (_, index) {
+            return {text: index + 1}
+        })
+
+        $uibModalInstance.close(selected);
+    };
+    /* 取消 */
+    $scope.cancel = function () {
+        $uibModalInstance.dismiss('cancel');
+    };
+})

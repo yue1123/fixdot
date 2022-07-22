@@ -1,23 +1,14 @@
 {
 	"compilerOptions": {
-		"target": "es5",
-		"lib": ["dom", "dom.iterable", "esnext", "es5", "es2015.symbol", "es2015.promise"],
-		"allowJs": true,
-		"skipLibCheck": true,
-		"esModuleInterop": true,
-		"allowSyntheticDefaultImports": true,
-		"suppressImplicitAnyIndexErrors": true,
-		"strict": true,
-		"downlevelIteration": true,
-		"forceConsistentCasingInFileNames": true,
-		"noFallthroughCasesInSwitch": true,
-		"module": "CommonJS",
+		"target": "es2017",
+		"module": "es2020",
+		"lib": ["es2020"],
+    "esModuleInterop": true,
 		"moduleResolution": "node",
+		"strict": true,
+		"strictNullChecks": true,
 		"resolveJsonModule": true,
-		"isolatedModules": false,
-		"noEmit": true,
-		"jsx": "react-jsx"
 	},
-	"include": ["src", "__test__/*.test.*", "__test__/*/*.test.*"],
+	"include": ["src", "__test__/*.test.ts", "__test__/*/*.test.ts"],
 	"exclude": ["node_modules"]
 }

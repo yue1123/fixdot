@@ -11,3 +11,8 @@ This is a command tools that fix english punctuation to chinese punctuation
    3. 修复结果统计
       1. 变动了那些文件
       2. 浏览不正确的标点
+
+
+# command
+1. fixdot --preview -p
+<!-- 默认模式,在执行命令后,会先列出问题标点符号片段,需要同意才执行修复后内容写入 -->

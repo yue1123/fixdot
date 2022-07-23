@@ -1,6 +1,6 @@
-不过,在配合使用TypeScript与Babel时,仍然有一些 注意事项.因为Babel对Typescrip的支持是纯编译形式（无类型校验,因此Jest在运行测试时不会对它们进行类型检查. 如果需要类型校验.可以改用ts-jest .也用ts_jest .也可以单独运行TypeScript编译器 tsc （或作为构建过程的一部分）  ,
+不过，在配合使用TypeScript与Babel时，仍然有一些 注意事项。因为Babel对Typescrip的支持是纯编译形式（无类型校验，因此Jest在运行测试时不会对它们进行类型检查。 如果需要类型校验。可以改用ts-jest。也用ts_jest。也可以单独运行TypeScript编译器 tsc （或作为构建过程的一部分）  ,
 
- // 缓存结果,避免tooltip多次调用
+ // 缓存结果，避免tooltip多次调用
 var cacheMap = Object.create(null)
 
 'use strict';
@@ -65,7 +65,7 @@ app.controller('SecurityPolicyListCtrl', function ($scope, SdpService, alerts, t
             var cycleStr = ''
             var uncycleStr = ``
             if (cycleTime) {
-                cycleStr = `周期性时间: 在${TIME_TYPE_MAP[cycleTime.type]}的`
+                cycleStr = `周期性时间： 在${TIME_TYPE_MAP[cycleTime.type]}的`
                 var month = cycleTime.months.join('，')
                 var week = cycleTime.weeks.map(function (item) {
                     return CONST.WEEK[item]
@@ -117,7 +117,7 @@ app.controller('SecurityPolicyListCtrl', function ($scope, SdpService, alerts, t
             return CONST.OS_VERSION_MAP[item.value]
         }
     }
-    // 缓存结果,避免tooltip多次调用
+    // 缓存结果，避免tooltip多次调用
     var cacheMap = Object.create(null)
     $scope.parseValue = function (item) {
         var cacheKey = item.$$hashKey
@@ -244,7 +244,7 @@ app.controller('SecurityPolicyConfigCtrl', function ($scope, SdpService, alerts,
             }
         },
         cycle: {
-            type: '', // ED: 每天 EW: 每周 EM: 每月 EY: 每年
+            type: '', // ED: 每天 EW： 每周 EM： 每月 EY： 每年
             ED: {
                 // days,week,months [0] 表示所有
                 times: [
@@ -586,7 +586,7 @@ app.controller('SecurityPolicyConfigCtrl', function ($scope, SdpService, alerts,
         return true
     }
 
-    // 只要对象中一个属性为true,就返回true
+    // 只要对象中一个属性为true，就返回true
     // function objSome(obj, keys) {
     //     return keys.some(function (key) {
     //         var value = obj[key]
@@ -597,7 +597,7 @@ app.controller('SecurityPolicyConfigCtrl', function ($scope, SdpService, alerts,
     //     })
     // }
 
-    // 对象中所有属性为true,就返回true
+    // 对象中所有属性为true，就返回true
     function objEvery(obj, keys) {
         return keys.every(function (key) {
             var value = obj[key]
@@ -769,7 +769,7 @@ app.controller('SecurityPolicyConfigCtrl', function ($scope, SdpService, alerts,
                     if (objEvery(item, keys)) {
 
                         if (Array.isArray(item.value) && item.key !== 'DEVICE_ID') {
-                            // 多个tag输入框,或者下拉多选{text:string}[] 转 string[]
+                            // 多个tag输入框，或者下拉多选{text:string}[] 转 string[]
                             tempData.value = tempData.value.map(function (item) {
                                 return item[valueKey[tempData.key]]
                             })
@@ -794,8 +794,8 @@ app.controller('SecurityPolicyConfigCtrl', function ($scope, SdpService, alerts,
             $scope.formData.strategyDtlDTO = strategyDtlDTO
             // return
             if ($scope.type === 'new') {
-                // TIP: 这里是替换时间,不是追加,追加在编辑时有问题
-                // TIP: 通过apply 调用是避免一次if判断,apply 的参数时数据,没有配置时间就是一个空数组,就相当于没有push
+                // TIP: 这里是替换时间，不是追加，追加在编辑时有问题
+                // TIP: 通过apply 调用是避免一次if判断,apply 的参数时数据，没有配置时间就是一个空数组，就相当于没有push
                 Array.prototype.push.apply($scope.formData.strategyDtlDTO, $scope.timeConfig.genFormData())
                 // return console.log($scope.formData.strategyDtlDTO)
                 $scope.loading = true

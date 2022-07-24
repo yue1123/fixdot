@@ -1,7 +1,7 @@
 import { test, expect } from 'vitest'
 import { dotPlaceReg } from '../src/constants'
 
-import fixDot from '../src/index'
+import fixDot from '../src/fixDot'
 test('前后中文,中间标点符号', async () => {
 	const testStr = `<script lang="ts" setup>
     import { ref } from 'vue'
@@ -10,6 +10,6 @@ test('前后中文,中间标点符号', async () => {
     ])
   </script>`
 
-	const res = await fixDot(testStr)
+	const { res } = await fixDot(testStr)
   expect(res && !dotPlaceReg.test(res)).toBe(true)
 }, 100)

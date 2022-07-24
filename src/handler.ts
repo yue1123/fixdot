@@ -46,8 +46,9 @@ export default async function handler(params: string[], options: Record<string, 
 	Promise.allSettled(queue).then((res) => {
 		let totalTime = 0
 		let totalSnippets = 0
-    const action = options.preview ? 'Found' : 'Fixed'
-		res.forEach(async (resItem) => {
+		const action = options.preview ? 'Found' : 'Fixed'
+		const writeQueue: (() => Promise<void>)[] = []
+		res.forEach((resItem) => {
 			if (resItem.status === 'fulfilled') {
 				const { snippets, time, file, res } = resItem.value
 				totalTime += time
@@ -55,30 +56,41 @@ export default async function handler(params: string[], options: Record<string, 
 				if (res.length !== 1 && snippets.length) {
 					console.log(chalk.cyan(`${action} ${file} ${snippets.length} snippets in ${time}ms`))
 					options.detail && printSnippets(snippets)
-          if (options.preview) {
-						const response = await prompts({
-							type: 'confirm',
-							name: 'value',
-							message: 'Would you like write to the result into file?',
-							initial: true
-						})
-						console.log(response) // => { value: 24 }
-					} else {
-						await write(file, res)
-					}
+					writeQueue.push(() => write(file, res))
 				}
 			} else {
 				console.log(chalk.red(resItem.reason.err.message))
 				console.log()
 			}
 		})
-		if (totalSnippets) {
-			console.log(
-				`${padTitle(`Total ${action}`, 12)} ${chalk.bold.green(totalSnippets)} snippets ${chalk.dim(`(${totalSnippets})`)}`
-			)
-			console.log(`${padTitle('Time', 12)} ${totalTime}ms`)
-		} else {
-			console.log('Yeah! no incorrect punctuation')
-		}
+		!(async () => {
+      // 没有可修复片段
+			if (!totalSnippets) {
+				return Promise.reject({ msg: 'Yeah! no incorrect punctuation' })
+			}
+			if (options.preview) {
+				const response = await prompts({
+					type: 'confirm',
+					name: 'value',
+					message: 'Would you like write to the result into file?',
+					initial: true
+				})
+				if (!response.value) {
+					return Promise.reject('REJECT')
+				}
+			}
+			return Promise.allSettled(writeQueue.map((writeFn) => writeFn()))
+		})()
+			.then(() => {
+				console.log(
+					`${padTitle(`Total Fixed`, 12)} ${chalk.bold.green(totalSnippets)} snippets ${chalk.dim(
+						`(${totalSnippets})`
+					)}`
+				)
+				console.log(`${padTitle('Time', 12)} ${totalTime}ms`)
+			})
+			.catch((reason) => {
+        if (reason.msg) console.log(reason.msg)
+			})
 	})
 }

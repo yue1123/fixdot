@@ -10,8 +10,8 @@ module.exports = {
 	input: './src/command.ts',
 	output: {
 		exports: 'named',
-		file: 'dist/fixdot.cjs',
-		format: 'cjs'
+		file: 'dist/fixdot.mjs',
+		format: 'esm'
 	},
 	// 插件
 	plugins: [

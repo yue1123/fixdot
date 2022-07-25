@@ -17,9 +17,17 @@
 	},
 	"bin": "./bin/fixdot.mjs",
 	"type": "module",
+	"repository": {
+		"type": "git",
+		"url": "git@github.com:yue1123/fixdot.git"
+	},
 	"keywords": [],
-	"author": "",
-	"license": "ISC",
+	"author": {
+		"name": "dh",
+		"url": "https://u1talk.com/dh"
+	},
+	"homepage": "https://github.com/yue1123/fixdot",
+	"license": "MIT",
 	"devDependencies": {
 		"@babel/preset-typescript": "^7.18.6",
 		"@rollup/plugin-commonjs": "^22.0.1",

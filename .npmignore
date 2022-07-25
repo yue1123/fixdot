@@ -1,0 +1,11 @@
+.husky
+docs
+node_modules
+src
+.git
+pnpm-lock.yaml
+commitlint.config.js
+.npmrc
+.npmignore
+rollup.config.ts
+.vscode

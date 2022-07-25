@@ -8,7 +8,7 @@
 		"dev": "rollup -c -w",
 		"build": "rollup -c",
 		"link_npm": "npm link",
-		"link_pnpm": "npm link --global"
+		"link_pnpm": "pnpm link --global"
 	},
 	"exports": {
 		"node": {
@@ -37,7 +37,6 @@
 	"dependencies": {
 		"chalk": "^5.0.1",
 		"commander": "^9.4.0",
-		"glob": "^8.0.3",
 		"prompts": "^2.4.2"
 	}
 }

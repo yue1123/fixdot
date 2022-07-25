@@ -1,12 +1,10 @@
 import { nodeResolve } from '@rollup/plugin-node-resolve'
-import  typescript from '@rollup/plugin-typescript'
+import typescript from '@rollup/plugin-typescript'
 import json from '@rollup/plugin-json'
 import commonjs from '@rollup/plugin-commonjs'
 
 const pkg = require('./package')
-
 const external = Object.keys(pkg.dependencies)
-console.log(external)
 
 module.exports = {
 	input: './src/command.ts',
@@ -24,5 +22,5 @@ module.exports = {
 		json(),
 		typescript()
 	],
-	external: Object.keys(pkg.dependencies)
+	external
 }

@@ -1,13 +1,14 @@
 # fixdot
-A command-line tool that fixes English punctuation in Chinese sentences
+一个修复中文语句中使用了英文标点的命令行小工具
 
-If you change the input method punctuation to English punctuation, but you don’t want to switch back and forth every time you enter Chinese. Or you want to correct punctuation errors in a Chinese article, etc. All these, this command line tool can help you
+如果你把输入法标点改成了英文标点，又不想每次输入中文是来回切换。又或者你想纠正一篇中文文章中的不小心输入的英文标点等等。这些，这个命令行tool都可以帮你搞定
 
-`fixdot <file path>` use the right punctuation
+通过 `fixdot <file path>` 修复文件中的标点
 
-TIP: file path support pattern match, like: `*/*.js`
+TIP file path 支持模式匹配，例如：`*/*.js`
+
 ## install
-Ensure you have Node.js version 12.20+ installed. Then run the following:
+请先确保你安装了 Node.js 12.20+ 版本，然后再运行下面的命令
 ```bash
 npm i -g fixdot
 # or yarn
@@ -28,5 +29,6 @@ Options:
   -d --detail    show incorrect snippets
   -h, --help     display help for command
 ```
+
 ## screenshot
 ![./screenshots/](./screenshots/Snipaste_2022-07-26_01-16-51.png)

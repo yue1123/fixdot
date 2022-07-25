@@ -1,4 +1,4 @@
-import { dotPlaceReg, replaceReg, dotMap, trimReg,spaceReg } from './constants'
+import { dotPlaceReg, replaceReg, dotMap, trimReg, spaceReg } from './constants'
 
 export interface FixDotResult {
 	res: string
@@ -26,7 +26,7 @@ export default async function fixDot(rawString: string): Promise<FixDotResult> {
 	} catch (error) {
 		throw {
 			res: error,
-			code: 'FIXED_ERROR',
+			code: 'FIXED_ERROR'
 		}
 	}
 }

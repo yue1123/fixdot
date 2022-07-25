@@ -9,6 +9,6 @@
 		"strictNullChecks": true,
 		"resolveJsonModule": true,
 	},
-	"include": ["src", "tes/*.test.ts", "tes/*/*.test.ts", "__test__"],
+	"include": ["src/*.ts", "test/*.test.ts", "test/*/*.test.ts", "__test__"],
 	"exclude": ["node_modules"]
 }

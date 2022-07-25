@@ -8,7 +8,7 @@ export interface _FixDotResult extends FixDotResult {
 	file: string
 }
 
-export default async function handler(params: string[], options: Record<string, boolean>) {
+export default async function run(params: string[], options: Record<string, boolean>) {
 	if (!params.length) {
 		console.error('error: missed file path argument')
 		return
@@ -27,26 +27,17 @@ export default async function handler(params: string[], options: Record<string, 
 					})
 				})
 				.catch((err: any) => {
-					// switch (err.code) {
-					// 	case 'FIXED_ERROR':
-					// 		break
-					// 	case 'ENOENT':
-					// 		break
-					// 	default:
-					// 		break
-					// }
 					reject({
 						file: path,
 						err
 					})
-					// console.error(err)
 				})
 		})
 	})
 	Promise.allSettled(queue).then((res) => {
 		let totalTime = 0
 		let totalSnippets = 0
-		const action = options.preview ? 'Found' : 'Fixed'
+		const action = options.preview ? 'found' : 'fixed'
 		const writeQueue: (() => Promise<void>)[] = []
 		res.forEach((resItem) => {
 			if (resItem.status === 'fulfilled') {
@@ -63,12 +54,12 @@ export default async function handler(params: string[], options: Record<string, 
 				console.log()
 			}
 		})
-		!(async () => {
+		!(async (preview) => {
       // 没有可修复片段
 			if (!totalSnippets) {
 				return Promise.reject({ msg: 'Yeah! no incorrect punctuation' })
 			}
-			if (options.preview) {
+			if (preview) {
 				const response = await prompts({
 					type: 'confirm',
 					name: 'value',
@@ -80,7 +71,7 @@ export default async function handler(params: string[], options: Record<string, 
 				}
 			}
 			return Promise.allSettled(writeQueue.map((writeFn) => writeFn()))
-		})()
+		})(options.preview)
 			.then(() => {
 				console.log(
 					`${padTitle(`Total Fixed`, 12)} ${chalk.bold.green(totalSnippets)} snippets ${chalk.dim(

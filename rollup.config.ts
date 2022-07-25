@@ -3,8 +3,10 @@ import  typescript from '@rollup/plugin-typescript'
 import json from '@rollup/plugin-json'
 import commonjs from '@rollup/plugin-commonjs'
 
-// const pkg = require('./package')
+const pkg = require('./package')
 
+const external = Object.keys(pkg.dependencies)
+console.log(external)
 
 module.exports = {
 	input: './src/command.ts',
@@ -22,5 +24,5 @@ module.exports = {
 		json(),
 		typescript()
 	],
-	external: ['chalk', 'commander', 'prompts']
+	external: Object.keys(pkg.dependencies)
 }

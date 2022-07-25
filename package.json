@@ -5,14 +5,17 @@
 	"main": "src/command.ts",
 	"scripts": {
 		"test": "vitest",
-		"dev": "rollup -c -w"
+		"dev": "rollup -c -w",
+		"build": "rollup -c",
+		"link_npm": "npm link",
+		"link_pnpm": "npm link --global"
 	},
 	"exports": {
 		"node": {
 			"import": "./dist/fixdot.mjs"
 		}
 	},
-	"bin": "./dist/fixdot.mjs",
+	"bin": "./bin/fixdot.mjs",
 	"type": "module",
 	"keywords": [],
 	"author": "",

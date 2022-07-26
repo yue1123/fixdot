@@ -6,6 +6,8 @@ If you change the input method punctuation to English punctuation, but you donâ€
 `fixdot <file path>` use the right punctuation
 
 TIP: file path support pattern match, like: `*/*.js`
+
+![./screenshots/](./screenshots/Snipaste_2022-07-26_01-16-51.png)
 ## install
 Ensure you have Node.js version 12.20+ installed. Then run the following:
 ```bash
@@ -17,7 +19,7 @@ pnpm i -g fixdot
 ```
 
 ## Usage
-```bash
+```txt
 Usage: fixDot [options] [letters...]
 
 Fix english punctuation to chinese punctuation for in Chinese sentences
@@ -28,5 +30,3 @@ Options:
   -d --detail    show incorrect snippets
   -h, --help     display help for command
 ```
-## screenshot
-![./screenshots/](./screenshots/Snipaste_2022-07-26_01-16-51.png)

@@ -7,6 +7,7 @@
 
 TIP file path 支持模式匹配，例如：`*/*.js`
 
+![./screenshots/](./screenshots/Snipaste_2022-07-26_01-16-51.png)
 ## install
 请先确保你安装了 Node.js 12.20+ 版本，然后再运行下面的命令
 ```bash
@@ -18,7 +19,7 @@ pnpm i -g fixdot
 ```
 
 ## Usage
-```bash
+```txt
 Usage: fixDot [options] [letters...]
 
 Fix english punctuation to chinese punctuation for in Chinese sentences
@@ -29,6 +30,3 @@ Options:
   -d --detail    show incorrect snippets
   -h, --help     display help for command
 ```
-
-## screenshot
-![./screenshots/](./screenshots/Snipaste_2022-07-26_01-16-51.png)

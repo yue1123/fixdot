@@ -7,7 +7,7 @@ If you change the input method punctuation to English punctuation, but you donâ€
 
 TIP: file path support pattern match, like: `*/*.js`
 
-![./screenshots/](./screenshots/Snipaste_2022-07-26_01-16-51.png)
+![./screenshots/](./screenshots/demo.png)
 ## install
 Ensure you have Node.js version 12.20+ installed. Then run the following:
 ```bash

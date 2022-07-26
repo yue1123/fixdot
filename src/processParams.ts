@@ -5,6 +5,7 @@ export default function processParams(params: string[]) {
 		if (cur.startsWith('/')) {
 			cur = `.${cur}`
 		}
+		console.log(fs.statSync(cur).is)
 		if (fs.statSync(cur).isFile()) {
 			pre.push(cur)
 		}

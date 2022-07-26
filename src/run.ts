@@ -9,11 +9,8 @@ export interface _FixDotResult extends FixDotResult {
 }
 
 export default async function run(params: string[], options: Record<string, boolean>) {
-	if (!params.length) {
-		console.error('error: missed file path argument')
-		return
-	}
-	params = [...new Set(params)]
+	// console.log(params, '==')
+	// return
 	const queue: Promise<_FixDotResult>[] = params.map((path: string) => {
 		return new Promise((resolve, reject) => {
 			read(path)
@@ -45,7 +42,9 @@ export default async function run(params: string[], options: Record<string, bool
 				totalTime += time
 				totalSnippets += snippets.length
 				if (res.length !== 1 && snippets.length) {
-					console.log(chalk.cyan(`${action} ${file} ${snippets.length} snippets in ${time}ms`))
+					console.log(
+						chalk.cyan(`${action} ${file} ${snippets.length} snippets in ${time}ms`)
+					)
 					options.detail && printSnippets(snippets)
 					writeQueue.push(() => write(file, res))
 				}
@@ -55,7 +54,7 @@ export default async function run(params: string[], options: Record<string, bool
 			}
 		})
 		!(async (preview) => {
-      // 没有可修复片段
+			// 没有可修复片段
 			if (!totalSnippets) {
 				return Promise.reject({ msg: 'Yeah! no incorrect punctuation' })
 			}
@@ -74,14 +73,14 @@ export default async function run(params: string[], options: Record<string, bool
 		})(options.preview)
 			.then(() => {
 				console.log(
-					`${padTitle(`Total Fixed`, 12)} ${chalk.bold.green(totalSnippets)} snippets ${chalk.dim(
-						`(${totalSnippets})`
-					)}`
+					`${padTitle(`Total Fixed`, 12)} ${chalk.bold.green(
+						totalSnippets
+					)} snippets ${chalk.dim(`(${totalSnippets})`)}`
 				)
 				console.log(`${padTitle('Time', 12)} ${totalTime}ms`)
 			})
 			.catch((reason) => {
-        if (reason.msg) console.log(reason.msg)
+				if (reason.msg) console.log(reason.msg)
 			})
 	})
 }

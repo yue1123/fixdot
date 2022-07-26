@@ -36,3 +36,19 @@ export function read(path: string) {
 		})
 	})
 }
+
+// 通配符获取文件
+export function getMatchPatternFiles(pattern: string): Promise<string[]> {
+	return new Promise<string[]>((resolve, reject) => {
+		glob(pattern, { root: process.cwd(), nodir: true }, (err, files) => {
+			if (err) {
+				return reject(err)
+			}
+			resolve(files)
+		})
+	})
+}
+
+export function isMagicPath(path: string) {
+	return glob.hasMagic(path)
+}

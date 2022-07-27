@@ -8,9 +8,7 @@ export interface _FixDotResult extends FixDotResult {
 	file: string
 }
 
-export default async function run(params: string[], options: Record<string, boolean>) {
-	// console.log(params, '==')
-	// return
+export default async function walk(params: string[], options: Record<string, boolean>) {
 	const queue: Promise<_FixDotResult>[] = params.map((path: string) => {
 		return new Promise((resolve, reject) => {
 			read(path)
@@ -42,9 +40,7 @@ export default async function run(params: string[], options: Record<string, bool
 				totalTime += time
 				totalSnippets += snippets.length
 				if (res.length !== 1 && snippets.length) {
-					console.log(
-						chalk.cyan(`${action} ${file} ${snippets.length} snippets in ${time}ms`)
-					)
+					console.log(chalk.cyan(`${action} ${file} ${snippets.length} snippets in ${time}ms`))
 					options.detail && printSnippets(snippets)
 					writeQueue.push(() => write(file, res))
 				}
@@ -63,7 +59,7 @@ export default async function run(params: string[], options: Record<string, bool
 					type: 'confirm',
 					name: 'value',
 					message: 'Would you like write to the result into file?',
-					initial: true
+					initial: false
 				})
 				if (!response.value) {
 					return Promise.reject('REJECT')
@@ -73,9 +69,9 @@ export default async function run(params: string[], options: Record<string, bool
 		})(options.preview)
 			.then(() => {
 				console.log(
-					`${padTitle(`Total Fixed`, 12)} ${chalk.bold.green(
-						totalSnippets
-					)} snippets ${chalk.dim(`(${totalSnippets})`)}`
+					`${padTitle(`Total Fixed`, 12)} ${chalk.bold.green(totalSnippets)} snippets ${chalk.dim(
+						`(${totalSnippets})`
+					)}`
 				)
 				console.log(`${padTitle('Time', 12)} ${totalTime}ms`)
 			})

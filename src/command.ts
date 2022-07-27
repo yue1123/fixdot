@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 import { version } from '../package.json'
-import run from './run'
+import run from './walk'
 import processParams from './processParams'
 import beforeRun from './beforeRun'
 

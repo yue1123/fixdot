@@ -29,7 +29,20 @@ import processParams from '../src/processParams'
 // 	])
 // })
 
-test('去除非文本文件', () => {
-	const res = processParams(['./screenshots/demo.png'])
-	console.log(res)
+test('过滤非文本文件', async () => {
+	const res = await processParams([
+		'./test/index.test.ts', //
+		'./screenshots/demo.png',
+		'./test/test.txt', //
+		'./test/trim.test.ts', //
+		'./test/withCode',
+		'./src/command.ts',
+		'./src/constants.ts',
+		'./src/fixDot.ts',
+		'./src/printSnippets.ts',
+		'./src/walk.ts',
+		'./src/utils.ts',
+		'/package.json'
+	])
+	expect(res.length).toBe(10)
 })

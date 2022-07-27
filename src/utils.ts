@@ -26,12 +26,12 @@ export function write(path: string, data: string): Promise<void> {
  * @param path 读取的文件路径
  */
 export function read(path: string) {
-	return new Promise<string>((resolve, reject) => {
+	return new Promise<Buffer>((resolve, reject) => {
 		readFile(path, (err: any, data) => {
 			if (err) {
 				reject(err)
 			} else {
-				resolve(data.toString())
+				resolve(data)
 			}
 		})
 	})

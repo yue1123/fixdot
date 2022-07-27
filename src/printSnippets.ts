@@ -1,5 +1,5 @@
 import chalk from 'chalk'
-import { _FixDotResult } from './run'
+import { _FixDotResult } from './walk'
 
 export default function printSnippets(snippets: string[][]) {
 	for (const [before, after] of snippets) {

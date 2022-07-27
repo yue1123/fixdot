@@ -13,6 +13,5 @@ export default async function beforeRun(params: string[]) {
 		}
 		return pre
 	}, [])
-	// console.log(res, '====')
 	return res
 }

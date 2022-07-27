@@ -13,6 +13,7 @@ specifiers:
   commander: ^9.4.0
   file-type: ^17.1.4
   glob: ^8.0.3
+  jschardet: ^3.0.0
   ora: ^6.1.2
   prompts: ^2.4.2
   rollup: ^2.77.0
@@ -25,6 +26,7 @@ dependencies:
   commander: 9.4.0
   file-type: 17.1.4
   glob: 8.0.3
+  jschardet: 3.0.0
   ora: 6.1.2
   prompts: 2.4.2
 
@@ -877,6 +879,11 @@ packages:
   /js-tokens/4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
     dev: true
+
+  /jschardet/3.0.0:
+    resolution: {integrity: sha512-lJH6tJ77V8Nzd5QWRkFYCLc13a3vADkh3r/Fi8HupZGWk2OVVDfnZP8V/VgQgZ+lzW0kG2UGb5hFgt3V3ndotQ==}
+    engines: {node: '>=0.1.90'}
+    dev: false
 
   /jsesc/2.5.2:
     resolution: {integrity: sha512-OYu7XEzjkCQ3C5Ps3QIZsQfNpqoJyZZA99wd9aWd05NCtC5pWOkShK2mkL6HXQR6/Cy2lbNdPlZBpuQHXE63gA==}

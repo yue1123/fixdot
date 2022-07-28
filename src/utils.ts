@@ -52,3 +52,5 @@ export function getMatchPatternFiles(pattern: string): Promise<string[]> {
 export function isMagicPath(path: string) {
 	return glob.hasMagic(path)
 }
+
+export const logger = console.log

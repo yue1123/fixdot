@@ -29,17 +29,27 @@ export default async function processParams(paths: string[]) {
 		return pre
 	}, [])
 	const fileItem = await Promise.allSettled(fileBufferReaders)
-	return fileItem.reduce<FileItemWithEncode[]>((list, cur) => {
+  let notSupportFiles: string[] = []
+	let supportFiles = fileItem.reduce<FileItemWithEncode[]>((list, cur) => {
 		if (cur.status === 'fulfilled') {
 			let { encoding } = detect(cur.value.buffer, { minimumThreshold: 0.95 })
-			encoding = encoding.toLocaleUpperCase()
-			if (encoding && supportEncodes.includes(encoding as SupportEncodesUnion)) {
-				list.push({
-					...cur.value,
-					encode: encoding as SupportEncodesUnion
-				})
-			}
+      if(encoding){
+        encoding = encoding.toLocaleLowerCase()
+				if (supportEncodes.includes(encoding as SupportEncodesUnion)) {
+					list.push({
+						...cur.value,
+						encode: encoding as SupportEncodesUnion
+					})
+				}
+      }else{
+        notSupportFiles.push(cur.value.file)
+      }
 		}
 		return list
 	}, [])
+  // if all file not support
+  if(!supportFiles.length && notSupportFiles.length){
+    throw new Error(`${notSupportFiles.join(' ')} not support`)
+  }
+  return supportFiles
 }

@@ -24,8 +24,11 @@ program
 		beforeRun(params)
 			.then((res) => {
 				console.log('glob res', res)
-				run(processParams(res), options)
+        return processParams(res)
 			})
+      .then(res=>{
+        run(res, options)
+      })
 			.catch((err) => {
 				console.log(err)
 			})

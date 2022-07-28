@@ -1,4 +1,9 @@
 # fixdot
+[![GitHub license](https://img.shields.io/github/license/yue1123/fixdot?style=flat-square)](https://github.com/yue1123/img-previewer/blob/main/LICENSE)
+<a href="https://github.com/yue1123/fixdot/releases">
+<img src="https://img.shields.io/github/package-json/v/yue1123/fixdot?color=f90&style=flat-square" alt="GitHub package.json version (subfolder of monorepo)">
+</a>
+
 A command-line tool that fixes English punctuation in Chinese sentences
 
 If you change the input method punctuation to English punctuation, but you donâ€™t want to switch back and forth every time you enter Chinese. Or you want to correct punctuation errors in a Chinese article, etc. All these, this command line tool can help you
@@ -6,6 +11,8 @@ If you change the input method punctuation to English punctuation, but you donâ€
 `fixdot <file path>` use the right punctuation
 
 TIP: file path support pattern match, like: `*/*.js`
+
+> The current version only supports these encodings: ascii, utf-8, utf16le, ucs-2, base64
 
 ![./screenshots/](./screenshots/demo.png)
 ## install

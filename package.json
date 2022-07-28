@@ -1,8 +1,8 @@
 {
 	"name": "fixdot",
-	"version": "0.0.1",
+	"version": "1.0.0",
 	"description": "This is a command tools which fix english punctuation to chinese punctuation for in Chinese sentences",
-	"main": "src/command.ts",
+	"main": "./dist/fixdot.mjs",
 	"scripts": {
 		"test": "vitest",
 		"dev": "rollup -c -w",

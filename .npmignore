@@ -1,7 +1,7 @@
 .husky
 docs
 node_modules
-src
+src/*
 .git
 pnpm-lock.yaml
 commitlint.config.js

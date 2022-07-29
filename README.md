@@ -6,9 +6,9 @@
 
 Other languages: [English](./README.md), [简体中文](./README.zh.md).
 
-A command-line tool that fixes English punctuation in Chinese sentences
+A command-line application that fixes English punctuation in Chinese sentences
 
-If you change the input method punctuation to English punctuation, but you don’t want to switch back and forth every time you enter Chinese. Or you want to correct punctuation errors in a Chinese article, etc. All these, this command line tool can help you
+If you change the input method punctuation to English punctuation, but you don’t want to switch back and forth every time you enter Chinese. Or you want to correct punctuation errors in a Chinese article, etc. All these, this command line application can help you
 
 `fixdot <file path>` use the right punctuation
 

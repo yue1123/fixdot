@@ -4,6 +4,8 @@
 <img src="https://img.shields.io/github/package-json/v/yue1123/fixdot?color=f90&style=flat-square" alt="GitHub package.json version (subfolder of monorepo)">
 </a>
 
+Other languages: [English](./README.md), [简体中文](./README.zh.md).
+
 一个修复中文语句中使用了英文标点的命令行小工具
 
 如果你把输入法标点改成了英文标点，又不想每次输入中文是来回切换。又或者你想纠正一篇中文文章中的不小心输入的英文标点等等。这些，这个命令行tool都可以帮你搞定

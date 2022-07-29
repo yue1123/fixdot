@@ -4,6 +4,8 @@
 <img src="https://img.shields.io/github/package-json/v/yue1123/fixdot?color=f90&style=flat-square" alt="GitHub package.json version (subfolder of monorepo)">
 </a>
 
+Other languages: [English](./README.md), [简体中文](./README.zh.md).
+
 A command-line tool that fixes English punctuation in Chinese sentences
 
 If you change the input method punctuation to English punctuation, but you don’t want to switch back and forth every time you enter Chinese. Or you want to correct punctuation errors in a Chinese article, etc. All these, this command line tool can help you
